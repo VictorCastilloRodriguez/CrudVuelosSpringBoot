@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,37 +35,31 @@ public class VueloService {
                         return v1.getNombreVuelo().compareToIgnoreCase(v2.getNombreVuelo());
                     } else if ("id".equalsIgnoreCase(ordenarPor)) {
                         return Integer.compare(v1.getId(), v2.getId());
-
                     } else {
                         return v1.getFechaSalida().compareTo(v2.getFechaSalida());
                     }
                 })
-                .map(v -> new VueloDto(
-                        v.getId(),
-                        v.getNombreVuelo(),
-                        v.getEmpresa(),
-                        v.getLugarSalida(),
-                        v.getLugarLlegada(),
-                        v.getFechaSalida(),
-                        v.getFechaLlegada(),
-                        (int) Fechas.calcularDuracionEnDias(v.getFechaSalida(), v.getFechaLlegada())
-                ))
+                .map(this::convertirADto)
                 .collect(Collectors.toList());
+    }
+
+    public VueloDto crearVuelo(Vuelo vuelo) {
+        validarFechas(vuelo);
+        Vuelo creado = repository.save(vuelo);
+        return convertirADto(creado);
+    }
+
+    public VueloDto actualizarVuelo(int id, Vuelo vueloActualizado) {
+        getById(id);
+        vueloActualizado.setId(id);
+        validarFechas(vueloActualizado);
+        Vuelo actualizado = repository.save(vueloActualizado);
+        return convertirADto(actualizado);
     }
 
     public Vuelo getById(int id) {
         return repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Vuelo con ID " + id + " no encontrado"));
-    }
-
-    public Vuelo crearVuelo(Vuelo vuelo) {
-        return repository.save(vuelo);
-    }
-
-    public Vuelo actualizarVuelo(int id, Vuelo vueloActualizado) {
-        Vuelo existente = getById(id);
-        vueloActualizado.setId(id);
-        return repository.save(vueloActualizado);
     }
 
     public void eliminarVuelo(int id) {
@@ -75,5 +68,25 @@ public class VueloService {
         }
         repository.deleteById(id);
     }
+
+    private VueloDto convertirADto(Vuelo v) {
+        return new VueloDto(
+                v.getId(),
+                v.getNombreVuelo(),
+                v.getEmpresa(),
+                v.getLugarSalida(),
+                v.getLugarLlegada(),
+                v.getFechaSalida(),
+                v.getFechaLlegada(),
+                Fechas.calcularDuracionEnDias(v.getFechaSalida(), v.getFechaLlegada())
+        );
+    }
+
+    private void validarFechas(Vuelo vuelo) {
+        if (vuelo.getFechaLlegada().isBefore(vuelo.getFechaSalida())) {
+            throw new IllegalArgumentException("La fecha de llegada no puede ser anterior a la de salida");
+        }
+    }
 }
+
 
