@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 @Service
 public class VueloService {
 
+    // Inyeccion de repositorio
     private final VueloRepository repository;
 
     @Autowired
@@ -21,6 +22,7 @@ public class VueloService {
         this.repository = repository;
     }
 
+    // filtros por empresa,lugar de llegada, fecha de salida
     public List<VueloDto> getAll(String empresa, String lugarLlegada, LocalDate fechaSalida, String ordenarPor) {
         return repository.findAll().stream()
                 .filter(v -> empresa == null || v.getEmpresa().equalsIgnoreCase(empresa))
@@ -43,12 +45,14 @@ public class VueloService {
                 .collect(Collectors.toList());
     }
 
+    // Valida las fechas del vuelo, guardar vuelo en repositorio y devolucion como dto
     public VueloDto crearVuelo(Vuelo vuelo) {
         validarFechas(vuelo);
         Vuelo creado = repository.save(vuelo);
         return convertirADto(creado);
     }
 
+    // Actualizar vuelo
     public VueloDto actualizarVuelo(int id, Vuelo vueloActualizado) {
         getById(id);
         vueloActualizado.setId(id);
@@ -57,11 +61,13 @@ public class VueloService {
         return convertirADto(actualizado);
     }
 
+    // Buscar vuelo por Id
     public Vuelo getById(int id) {
         return repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Vuelo con ID " + id + " no encontrado"));
     }
 
+    // Eliminar vuelo
     public void eliminarVuelo(int id) {
         if (!repository.existsById(id)) {
             throw new RuntimeException("Vuelo con ID " + id + " no existe");
@@ -69,6 +75,7 @@ public class VueloService {
         repository.deleteById(id);
     }
 
+    // Convertir Vuelo a VueloDto con calculo de duracion de vuelo en dias
     private VueloDto convertirADto(Vuelo v) {
         return new VueloDto(
                 v.getId(),
@@ -82,6 +89,7 @@ public class VueloService {
         );
     }
 
+    // Verifica que la fecha de llegada no sea anterior a la de salida.
     private void validarFechas(Vuelo vuelo) {
         if (vuelo.getFechaLlegada().isBefore(vuelo.getFechaSalida())) {
             throw new IllegalArgumentException("La fecha de llegada no puede ser anterior a la de salida");

@@ -10,9 +10,14 @@ import java.util.concurrent.atomic.AtomicLong;
 
 @Repository
 public class VueloRepository {
+
+    // simulador de BD
     private final Map<Integer, Vuelo> vuelos = new HashMap<>();
+
+    // Generar Id
     private final AtomicLong idGenerator = new AtomicLong();
 
+    // Precarga de lista de vuelos
     @PostConstruct
     public void preLista() {
         vuelos.put(1, new Vuelo(1, "H251-J", "Emirates", "Barcelona", "Hong Kong", LocalDate.of(2025, 7, 19), LocalDate.of(2025, 7, 20)));
@@ -27,14 +32,17 @@ public class VueloRepository {
         vuelos.put(10, new Vuelo(10, "L623-I", "American Airlines", "Barcelona", "New York", LocalDate.of(2025, 12, 6), LocalDate.of(2025, 12, 7)));
     }
 
+    // Devolver vuelos como lista
     public List<Vuelo> findAll() {
         return new ArrayList<>(vuelos.values());
     }
 
+    // Buscar vuelo por Id
     public Optional<Vuelo> findById(int id) {
         return Optional.ofNullable(vuelos.get(id));
     }
 
+    // Guardar vuelo
     public Vuelo save(Vuelo vuelo) {
         if (vuelo.getId() == null) {
             vuelo.setId((int) idGenerator.incrementAndGet());
@@ -43,10 +51,12 @@ public class VueloRepository {
         return vuelo;
     }
 
+    // Verificar si existe el vuelo con Id
     public boolean existsById(int id) {
         return vuelos.containsKey(id);
     }
 
+    // Eliminar vuelo por Id
     public void deleteById(int id) {
         vuelos.remove(id);
     }
